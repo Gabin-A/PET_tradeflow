@@ -5,6 +5,10 @@ import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
 
+# ---- Debugging Info ----
+st.write("Current Working Directory:", os.getcwd())
+st.write("Files in current folder:", os.listdir())
+st.write("Files in PET_flow:", os.listdir("PET_flow"))
 
 # ---- Load Data ----
 @st.cache_data
@@ -144,5 +148,6 @@ st.dataframe(top_partners.style.format({
     'Total_Trade': "{:.0f}"
 }))
 ""
+
 
 
