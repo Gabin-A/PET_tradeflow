@@ -105,12 +105,33 @@ fig.update_layout(
 st.plotly_chart(fig, use_container_width=True)
 
 # ---- Sankey Diagram ----
+# ---- Sankey Diagram ----
 sankey_data = merged.copy()
 sankey_data = sankey_data[sankey_data['Total_Trade'] > 0]
-sankey_data = sankey_data.sort_values(by='Total_Trade', ascending=False).head(15)
 
-labels = list(set(sankey_data['Country']).union(set(sankey_data['Partner'])))
-label_map = {name: i for i, name in enumerate(labels)}
+# Select top 15 importers and exporters separately by quantity
+top_imports = sankey_data.sort_values(by='Import_Quantity', ascending=False).head(15)
+top_exports = sankey_data.sort_values(by='Export_Quantity', ascending=False).head(15)
+
+# Merge both sets
+sankey_subset = pd.concat([top_imports, top_exports]).drop_duplicates()
+
+# Labels for left (importers), center (selected country), right (export destinations)
+left_labels = [f"Import: {p} (kg)" for p in top_imports['Partner']]
+right_labels = [f"Export: {p} (kg)" for p in top_exports['Partner']]
+center_label = f"{selected[0]} (kg)"
+
+labels = left_labels + [center_label] + right_labels
+label_map = {label: i for i, label in enumerate(labels)}
+
+# Build links from import partners to center and center to export partners
+sources = [label_map[f"Import: {r['Partner']} (kg)"] for _, r in top_imports.iterrows()] + \
+          [label_map[center_label]] * len(top_exports)
+
+targets = [label_map[center_label]] * len(top_imports) + \
+          [label_map[f"Export: {r['Partner']} (kg)"] for _, r in top_exports.iterrows()]
+
+values = list(top_imports['Import_Quantity']) + list(top_exports['Export_Quantity'])
 
 sankey_fig = go.Figure(data=[go.Sankey(
     node=dict(
@@ -120,15 +141,15 @@ sankey_fig = go.Figure(data=[go.Sankey(
         label=labels
     ),
     link=dict(
-        source=[label_map[c] for c in sankey_data['Country']],
-        target=[label_map[p] for p in sankey_data['Partner']],
-        value=sankey_data['Total_Trade'],
-        color=sankey_data['Color']
+        source=sources,
+        target=targets,
+        value=values
     )
 )])
 
-st.subheader("Top 15 Trade Flows – Sankey Diagram")
+st.subheader("Top 15 Import/Export Flows (in kg) – Sankey Diagram")
 st.plotly_chart(sankey_fig, use_container_width=True)
+
 
 # ---- Top 10 Partner Summary ----
 st.subheader("Top 10 Partners by Volume")
