@@ -1,12 +1,10 @@
+""
 import os
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
+import plotly.express as px
 
-# ---- Debugging Info ----
-st.write("Current Working Directory:", os.getcwd())
-st.write("Files in current folder:", os.listdir())
-st.write("Files in PET_flow:", os.listdir("PET_flow"))
 
 # ---- Load Data ----
 @st.cache_data
@@ -79,7 +77,6 @@ fig.add_trace(go.Scattergeo(
     hoverinfo='text'
 ))
 
-# Mark origin countries
 for country in selected:
     if country in COUNTRY_COORDS:
         lat, lon = COUNTRY_COORDS[country]
@@ -102,4 +99,50 @@ fig.update_layout(
 )
 
 st.plotly_chart(fig, use_container_width=True)
+
+# ---- Sankey Diagram ----
+sankey_data = merged.copy()
+sankey_data = sankey_data[sankey_data['Total_Trade'] > 0]
+sankey_data = sankey_data.sort_values(by='Total_Trade', ascending=False).head(15)
+
+labels = list(set(sankey_data['Country']).union(set(sankey_data['Partner'])))
+label_map = {name: i for i, name in enumerate(labels)}
+
+sankey_fig = go.Figure(data=[go.Sankey(
+    node=dict(
+        pad=15,
+        thickness=20,
+        line=dict(color="black", width=0.5),
+        label=labels
+    ),
+    link=dict(
+        source=[label_map[c] for c in sankey_data['Country']],
+        target=[label_map[p] for p in sankey_data['Partner']],
+        value=sankey_data['Total_Trade'],
+        color=sankey_data['Color']
+    )
+)])
+
+st.subheader("Top 15 Trade Flows – Sankey Diagram")
+st.plotly_chart(sankey_fig, use_container_width=True)
+
+# ---- Top 10 Partner Summary ----
+st.subheader("Top 10 Partners by Volume")
+top_partners = merged.groupby('Partner').agg({
+    'Import_Quantity': 'sum',
+    'Export_Quantity': 'sum',
+    'Import_Value': 'sum',
+    'Export_Value': 'sum',
+    'Total_Trade': 'sum'
+}).sort_values(by='Total_Trade', ascending=False).head(10).reset_index()
+
+st.dataframe(top_partners.style.format({
+    'Import_Quantity': "{:.0f}",
+    'Export_Quantity': "{:.0f}",
+    'Import_Value': "${:,.0f}",
+    'Export_Value': "${:,.0f}",
+    'Total_Trade': "{:.0f}"
+}))
+""
+
 
