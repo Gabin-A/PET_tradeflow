@@ -154,19 +154,19 @@ st.plotly_chart(sankey_fig, use_container_width=True)
 # ---- Top 10 Partner Summary ----
 st.subheader("Top 10 Partners by Volume")
 top_partners = merged.groupby('Partner').agg({
-    'Import_Quantity': 'sum',
-    'Export_Quantity': 'sum',
-    'Import_Value': 'sum',
-    'Export_Value': 'sum',
-    'Total_Trade': 'sum'
+    'Import Quantity (kg)': 'sum',
+    'Export Quantity (kg)': 'sum',
+    'Import Value (kg)': 'sum',
+    'Export Value (kg)': 'sum',
+    'Total Trade (import + export (kg))': 'sum'
 }).sort_values(by='Total_Trade', ascending=False).head(10).reset_index()
 
 st.dataframe(top_partners.style.format({
-    'Import_Quantity': "{:.0f}",
-    'Export_Quantity': "{:.0f}",
-    'Import_Value': "${:,.0f}",
-    'Export_Value': "${:,.0f}",
-    'Total_Trade': "{:.0f}"
+    'Import Quantity (kg)': "{:.0f}",
+    'Export Quantity (kg)': "{:.0f}",
+    'Import Value (kg)': "${:,.0f}",
+    'Export Value (kg)': "${:,.0f}",
+    'Total Trade (import + export (kg))': "{:.0f}"
 }))
 ""
 
