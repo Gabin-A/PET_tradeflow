@@ -24,18 +24,18 @@ def load_data():
 
 df = load_data()
 
-# ---- Country Coordinates ----
-COUNTRY_COORDS = {
-    'Austria': (47.5162, 14.5501), 'Germany': (51.1657, 10.4515), 'France': (46.6034, 1.8883),
-    'Italy': (41.8719, 12.5674), 'Poland': (51.9194, 19.1451), 'Slovenia': (46.1512, 14.9955),
-    'Czech Republic': (49.8175, 15.4730), 'Hungary': (47.1625, 19.5033), 'Netherlands': (52.1326, 5.2913),
-    'Belgium': (50.5039, 4.4699), 'Switzerland': (46.8182, 8.2275), 'Spain': (40.4637, -3.7492),
-    'Slovakia': (48.6690, 19.6990), 'Croatia': (45.1000, 15.2000), 'Romania': (45.9432, 24.9668),
-    'Bulgaria': (42.7339, 25.4858), 'Sweden': (60.1282, 18.6435), 'Denmark': (56.2639, 9.5018),
-    'Greece': (39.0742, 21.8243), 'Portugal': (39.3999, -8.2245), 'Finland': (61.9241, 25.7482),
-    'Norway': (60.4720, 8.4689), 'Ireland': (53.4129, -8.2439), 'Estonia': (58.5953, 25.0136),
-    'Latvia': (56.8796, 24.6032), 'Lithuania': (55.1694, 23.8813)
-}
+# ---- Get All Country Coordinates ----
+from geopy.geocoders import Nominatim
+geolocator = Nominatim(user_agent="pet_trade_locator")
+def get_coords(country):
+    try:
+        location = geolocator.geocode(country)
+        return (location.latitude, location.longitude)
+    except:
+        return (None, None)
+
+all_countries = pd.unique(df[['Country', 'Partner']].values.ravel('K'))
+ALL_COORDS = {c: get_coords(c) for c in all_countries}
 
 # ---- UI ----
 st.set_page_config(layout="wide")
@@ -63,8 +63,8 @@ merged['Color'] = merged['Direction'].map({'Export Surplus': 'green', 'Import Su
 merged['Total_Trade'] = merged['Export_Quantity'] + merged['Import_Quantity']
 merged['Size'] = merged['Total_Trade']**0.5 / 100
 
-merged['Lat'] = merged['Partner'].map(lambda c: COUNTRY_COORDS.get(c, (None, None))[0])
-merged['Lon'] = merged['Partner'].map(lambda c: COUNTRY_COORDS.get(c, (None, None))[1])
+merged['Lat'] = merged['Partner'].map(lambda c: ALL_COORDS.get(c, (None, None))[0])
+merged['Lon'] = merged['Partner'].map(lambda c: ALL_COORDS.get(c, (None, None))[1])
 merged['Text'] = merged.apply(lambda r: f"{r['Partner']}<br>Export: {r['Export_Quantity']:,.0f} Kg<br>Import: {r['Import_Quantity']:,.0f} Kg<br>Balance: {r['Balance']:,.0f} Kg", axis=1)
 merged = merged.dropna(subset=['Lat', 'Lon'])
 
@@ -81,8 +81,8 @@ fig.add_trace(go.Scattergeo(
 ))
 
 for country in selected:
-    if country in COUNTRY_COORDS:
-        lat, lon = COUNTRY_COORDS[country]
+    if country in ALL_COORDS:
+        lat, lon = ALL_COORDS[country]
         fig.add_trace(go.Scattergeo(
             lon=[lon], lat=[lat], mode='markers+text',
             marker=dict(size=10, color='blue'),
@@ -103,46 +103,37 @@ fig.update_layout(
 
 st.plotly_chart(fig, use_container_width=True)
 
-# ---- Sankey Diagram ----
+# ---- Sankey Diagram (Top 15 Imports and Exports) ----
 sankey_data = merged.copy()
 sankey_data = sankey_data[sankey_data['Total_Trade'] > 0]
 
-# Use all import and export partners for selected countries
-import_partners = sankey_data[sankey_data['Import_Quantity'] > 0]
-export_partners = sankey_data[sankey_data['Export_Quantity'] > 0]
+# Select top 15 importers and exporters separately by quantity
+top_imports = sankey_data.sort_values(by='Import_Quantity', ascending=False).head(15)
+top_exports = sankey_data.sort_values(by='Export_Quantity', ascending=False).head(15)
 
-# Labels for left (importers), center (selected country), right (export destinations)
-left_labels = [f"Import: {p} (kg)" for p in import_partners['Partner'].unique()]
-right_labels = [f"Export: {p} (kg)" for p in export_partners['Partner'].unique()]
+# Merge both sets
+sankey_subset = pd.concat([top_imports, top_exports]).drop_duplicates()
+
+left_labels = [f"Import: {p} (kg)" for p in top_imports['Partner']]
+right_labels = [f"Export: {p} (kg)" for p in top_exports['Partner']]
 center_label = f"{selected[0]} (kg)"
-
 labels = left_labels + [center_label] + right_labels
 label_map = {label: i for i, label in enumerate(labels)}
 
-# Build links from import partners to center and center to export partners
-sources = [label_map[f"Import: {r['Partner']} (kg)"] for _, r in import_partners.iterrows()] + \
-          [label_map[center_label]] * len(export_partners)
+sources = [label_map[f"Import: {r['Partner']} (kg)"] for _, r in top_imports.iterrows()] + \
+          [label_map[center_label]] * len(top_exports)
 
-targets = [label_map[center_label]] * len(import_partners) + \
-          [label_map[f"Export: {r['Partner']} (kg)"] for _, r in export_partners.iterrows()]
+targets = [label_map[center_label]] * len(top_imports) + \
+          [label_map[f"Export: {r['Partner']} (kg)"] for _, r in top_exports.iterrows()]
 
-values = list(import_partners['Import_Quantity']) + list(export_partners['Export_Quantity'])
+values = list(top_imports['Import_Quantity']) + list(top_exports['Export_Quantity'])
 
 sankey_fig = go.Figure(data=[go.Sankey(
-    node=dict(
-        pad=15,
-        thickness=20,
-        line=dict(color="black", width=0.5),
-        label=labels
-    ),
-    link=dict(
-        source=sources,
-        target=targets,
-        value=values
-    )
+    node=dict(pad=15, thickness=20, line=dict(color="black", width=0.5), label=labels),
+    link=dict(source=sources, target=targets, value=values)
 )])
 
-st.subheader("All Import/Export Flows (in kg) – Sankey Diagram")
+st.subheader("Top 15 Import/Export Flows (in kg) – Sankey Diagram")
 st.plotly_chart(sankey_fig, use_container_width=True)
 
 # ---- Top 10 Partner Summary ----
@@ -162,6 +153,7 @@ st.dataframe(top_partners.style.format({
     'Export_Value': "${:,.0f}",
     'Total_Trade': "{:.0f}"
 }))
+
 
 
 
