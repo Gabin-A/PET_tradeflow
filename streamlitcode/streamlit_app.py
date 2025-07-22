@@ -1,13 +1,8 @@
-import os
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
-
-# ---- Debugging Info ----
-st.write("Current Working Directory:", os.getcwd())
-st.write("Files in current folder:", os.listdir())
-st.write("Files in PET_flow:", os.listdir("PET_flow"))
+from geopy.geocoders import Nominatim
 
 # ---- Load Data ----
 @st.cache_data
@@ -25,8 +20,8 @@ def load_data():
 df = load_data()
 
 # ---- Get All Country Coordinates ----
-from geopy.geocoders import Nominatim
 geolocator = Nominatim(user_agent="pet_trade_locator")
+@st.cache_data
 def get_coords(country):
     try:
         location = geolocator.geocode(country)
@@ -107,11 +102,9 @@ st.plotly_chart(fig, use_container_width=True)
 sankey_data = merged.copy()
 sankey_data = sankey_data[sankey_data['Total_Trade'] > 0]
 
-# Select top 15 importers and exporters separately by quantity
 top_imports = sankey_data.sort_values(by='Import_Quantity', ascending=False).head(15)
 top_exports = sankey_data.sort_values(by='Export_Quantity', ascending=False).head(15)
 
-# Merge both sets
 sankey_subset = pd.concat([top_imports, top_exports]).drop_duplicates()
 
 left_labels = [f"Import: {p} (kg)" for p in top_imports['Partner']]
@@ -153,7 +146,6 @@ st.dataframe(top_partners.style.format({
     'Export_Value': "${:,.0f}",
     'Total_Trade': "{:.0f}"
 }))
-
 
 
 
