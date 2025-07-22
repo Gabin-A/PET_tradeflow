@@ -1,11 +1,10 @@
 import os
-st.write("Current Working Directory:", os.getcwd())
-st.write("Files in current folder:", os.listdir())
-st.write("Files in ../PET_flow:", os.listdir("../PET_flow"))
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
-
+st.write("Current Working Directory:", os.getcwd())
+st.write("Files in current folder:", os.listdir())
+st.write("Files in ../PET_flow:", os.listdir("../PET_flow"))
 # ---- Load Data ----
 @st.cache_data
 def load_data():
