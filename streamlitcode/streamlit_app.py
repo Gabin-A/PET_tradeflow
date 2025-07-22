@@ -139,13 +139,23 @@ top_partners = merged.groupby('Partner').agg({
     'Total_Trade': 'sum'
 }).sort_values(by='Total_Trade', ascending=False).head(10).reset_index()
 
+# Rename columns to include units
+top_partners = top_partners.rename(columns={
+    'Import_Quantity': 'Import Quantity (KG)',
+    'Export_Quantity': 'Export Quantity (KG)',
+    'Import_Value': 'Import Value (1000 $)',
+    'Export_Value': 'Export Value (1000 $)',
+    'Total_Trade': 'Total Trade ($)'
+})
+
 st.dataframe(top_partners.style.format({
-    'Import_Quantity': "{:.0f}",
-    'Export_Quantity': "{:.0f}",
-    'Import_Value': "${:,.0f}",
-    'Export_Value': "${:,.0f}",
-    'Total_Trade': "{:.0f}"
+    'Import Quantity (KG)': "{:.0f}",
+    'Export Quantity (KG)': "{:.0f}",
+    'Import Value (1000 $)': "${:,.0f}",
+    'Export Value (1000 $)': "${:,.0f}",
+    'Total Trade ($)': "{:.0f}"
 }))
+
 
 
 
