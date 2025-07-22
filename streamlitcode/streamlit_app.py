@@ -2,14 +2,15 @@ import os
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
-st.write("Current Working Directorys:", os.getcwd())
+
+# ---- Debugging Info ----
+st.write("Current Working Directory:", os.getcwd())
 st.write("Files in current folder:", os.listdir())
-st.write("Files in ../PET_flow:", os.listdir("../PET_flow"))
+st.write("Files in PET_flow:", os.listdir("PET_flow"))
+
 # ---- Load Data ----
 @st.cache_data
 def load_data():
-    import os
-    st.write("Files in PET_flow:", os.listdir("PET_flow"))
     df = pd.read_excel("PET_flow/Allcountries_export_WITS.xlsx", sheet_name="By-HS6Product")
     df = df[
         (df['Partner'].notna()) &
@@ -101,3 +102,4 @@ fig.update_layout(
 )
 
 st.plotly_chart(fig, use_container_width=True)
+
