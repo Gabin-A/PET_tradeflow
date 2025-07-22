@@ -8,7 +8,7 @@ st.write("Files in ../PET_flow:", os.listdir("../PET_flow"))
 # ---- Load Data ----
 @st.cache_data
 def load_data():
-    df = pd.read_excel("../PET_flow/Allcountries_export_WITS.xlsx", sheet_name="By-HS6Product")
+    df = pd.read_excel("/mount/src/pet_tradeflow/PET_flow/Allcountries_export_WITS.xlsx", sheet_name="By-HS6Product")
     df = df[
         (df['Partner'].notna()) &
         (df['Quantity'].notna()) &
