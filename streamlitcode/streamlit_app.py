@@ -1,4 +1,3 @@
-""
 import os
 import streamlit as st
 import pandas as pd
@@ -105,33 +104,29 @@ fig.update_layout(
 st.plotly_chart(fig, use_container_width=True)
 
 # ---- Sankey Diagram ----
-# ---- Sankey Diagram ----
 sankey_data = merged.copy()
 sankey_data = sankey_data[sankey_data['Total_Trade'] > 0]
 
-# Select top 15 importers and exporters separately by quantity
-top_imports = sankey_data.sort_values(by='Import_Quantity', ascending=False).head(15)
-top_exports = sankey_data.sort_values(by='Export_Quantity', ascending=False).head(15)
-
-# Merge both sets
-sankey_subset = pd.concat([top_imports, top_exports]).drop_duplicates()
+# Use all import and export partners for selected countries
+import_partners = sankey_data[sankey_data['Import_Quantity'] > 0]
+export_partners = sankey_data[sankey_data['Export_Quantity'] > 0]
 
 # Labels for left (importers), center (selected country), right (export destinations)
-left_labels = [f"Import: {p} (kg)" for p in top_imports['Partner']]
-right_labels = [f"Export: {p} (kg)" for p in top_exports['Partner']]
+left_labels = [f"Import: {p} (kg)" for p in import_partners['Partner'].unique()]
+right_labels = [f"Export: {p} (kg)" for p in export_partners['Partner'].unique()]
 center_label = f"{selected[0]} (kg)"
 
 labels = left_labels + [center_label] + right_labels
 label_map = {label: i for i, label in enumerate(labels)}
 
 # Build links from import partners to center and center to export partners
-sources = [label_map[f"Import: {r['Partner']} (kg)"] for _, r in top_imports.iterrows()] + \
-          [label_map[center_label]] * len(top_exports)
+sources = [label_map[f"Import: {r['Partner']} (kg)"] for _, r in import_partners.iterrows()] + \
+          [label_map[center_label]] * len(export_partners)
 
-targets = [label_map[center_label]] * len(top_imports) + \
-          [label_map[f"Export: {r['Partner']} (kg)"] for _, r in top_exports.iterrows()]
+targets = [label_map[center_label]] * len(import_partners) + \
+          [label_map[f"Export: {r['Partner']} (kg)"] for _, r in export_partners.iterrows()]
 
-values = list(top_imports['Import_Quantity']) + list(top_exports['Export_Quantity'])
+values = list(import_partners['Import_Quantity']) + list(export_partners['Export_Quantity'])
 
 sankey_fig = go.Figure(data=[go.Sankey(
     node=dict(
@@ -147,28 +142,27 @@ sankey_fig = go.Figure(data=[go.Sankey(
     )
 )])
 
-st.subheader("Top 15 Import/Export Flows (in kg) – Sankey Diagram")
+st.subheader("All Import/Export Flows (in kg) – Sankey Diagram")
 st.plotly_chart(sankey_fig, use_container_width=True)
-
 
 # ---- Top 10 Partner Summary ----
 st.subheader("Top 10 Partners by Volume")
 top_partners = merged.groupby('Partner').agg({
-    'Import Quantity (kg)': 'sum',
-    'Export Quantity (kg)': 'sum',
-    'Import Value (kg)': 'sum',
-    'Export Value (kg)': 'sum',
-    'Total Trade (import + export (kg))': 'sum'
+    'Import_Quantity': 'sum',
+    'Export_Quantity': 'sum',
+    'Import_Value': 'sum',
+    'Export_Value': 'sum',
+    'Total_Trade': 'sum'
 }).sort_values(by='Total_Trade', ascending=False).head(10).reset_index()
 
 st.dataframe(top_partners.style.format({
-    'Import Quantity (kg)': "{:.0f}",
-    'Export Quantity (kg)': "{:.0f}",
-    'Import Value (kg)': "${:,.0f}",
-    'Export Value (kg)': "${:,.0f}",
-    'Total Trade (import + export (kg))': "{:.0f}"
+    'Import_Quantity': "{:.0f}",
+    'Export_Quantity': "{:.0f}",
+    'Import_Value': "${:,.0f}",
+    'Export_Value': "${:,.0f}",
+    'Total_Trade': "{:.0f}"
 }))
-""
+
 
 
 
