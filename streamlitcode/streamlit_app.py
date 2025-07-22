@@ -102,14 +102,20 @@ st.plotly_chart(fig, use_container_width=True)
 sankey_data = merged.copy()
 sankey_data = sankey_data[sankey_data['Total_Trade'] > 0]
 
-top_imports = sankey_data.sort_values(by='Import_Quantity', ascending=False).head(15)
-top_exports = sankey_data.sort_values(by='Export_Quantity', ascending=False).head(15)
+# Aggregate across all selected countries for Sankey
+sankey_summary = sankey_data.groupby('Partner').agg({
+    'Import_Quantity': 'sum',
+    'Export_Quantity': 'sum'
+}).reset_index()
+
+top_imports = sankey_summary.sort_values(by='Import_Quantity', ascending=False).head(15)
+top_exports = sankey_summary.sort_values(by='Export_Quantity', ascending=False).head(15)
 
 sankey_subset = pd.concat([top_imports, top_exports]).drop_duplicates()
 
 left_labels = [f"Import: {p} (kg)" for p in top_imports['Partner']]
 right_labels = [f"Export: {p} (kg)" for p in top_exports['Partner']]
-center_label = f"{selected[0]} (kg)"
+center_label = f"{', '.join(selected)} (kg)"
 labels = left_labels + [center_label] + right_labels
 label_map = {label: i for i, label in enumerate(labels)}
 
