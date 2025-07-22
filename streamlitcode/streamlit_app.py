@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
-from geopy.geocoders import Nominatim
 
 # ---- Load Data ----
 @st.cache_data
@@ -19,18 +18,30 @@ def load_data():
 
 df = load_data()
 
-# ---- Get All Country Coordinates ----
-geolocator = Nominatim(user_agent="pet_trade_locator")
-@st.cache_data
-def get_coords(country):
-    try:
-        location = geolocator.geocode(country)
-        return (location.latitude, location.longitude)
-    except:
-        return (None, None)
+# ---- Preloaded Coordinates for All Countries ----
+ALL_COORDS = {
+    'Austria': (47.5162, 14.5501), 'Germany': (51.1657, 10.4515), 'France': (46.6034, 1.8883),
+    'Italy': (41.8719, 12.5674), 'Poland': (51.9194, 19.1451), 'Slovenia': (46.1512, 14.9955),
+    'Czech Republic': (49.8175, 15.4730), 'Hungary': (47.1625, 19.5033), 'Netherlands': (52.1326, 5.2913),
+    'Belgium': (50.5039, 4.4699), 'Switzerland': (46.8182, 8.2275), 'Spain': (40.4637, -3.7492),
+    'Slovakia': (48.6690, 19.6990), 'Croatia': (45.1000, 15.2000), 'Romania': (45.9432, 24.9668),
+    'Bulgaria': (42.7339, 25.4858), 'Sweden': (60.1282, 18.6435), 'Denmark': (56.2639, 9.5018),
+    'Greece': (39.0742, 21.8243), 'Portugal': (39.3999, -8.2245), 'Finland': (61.9241, 25.7482),
+    'Norway': (60.4720, 8.4689), 'Ireland': (53.4129, -8.2439), 'Estonia': (58.5953, 25.0136),
+    'Latvia': (56.8796, 24.6032), 'Lithuania': (55.1694, 23.8813), 'United States': (37.0902, -95.7129),
+    'Japan': (36.2048, 138.2529), 'China': (35.8617, 104.1954), 'India': (20.5937, 78.9629),
+    'Brazil': (-14.2350, -51.9253), 'Mexico': (23.6345, -102.5528), 'Canada': (56.1304, -106.3468),
+    'South Korea': (35.9078, 127.7669), 'Australia': (-25.2744, 133.7751), 'Russia': (61.5240, 105.3188),
+    'Turkey': (38.9637, 35.2433), 'Ukraine': (48.3794, 31.1656), 'Egypt': (26.8206, 30.8025),
+    'South Africa': (-30.5595, 22.9375), 'Singapore': (1.3521, 103.8198), 'Thailand': (15.8700, 100.9925),
+    'Indonesia': (-0.7893, 113.9213), 'Malaysia': (4.2105, 101.9758)
+}
 
+# Add any missing countries dynamically
 all_countries = pd.unique(df[['Country', 'Partner']].values.ravel('K'))
-ALL_COORDS = {c: get_coords(c) for c in all_countries}
+for c in all_countries:
+    if c not in ALL_COORDS:
+        ALL_COORDS[c] = (None, None)
 
 # ---- UI ----
 st.set_page_config(layout="wide")
@@ -102,7 +113,6 @@ st.plotly_chart(fig, use_container_width=True)
 sankey_data = merged.copy()
 sankey_data = sankey_data[sankey_data['Total_Trade'] > 0]
 
-# Aggregate across all selected countries for Sankey
 sankey_summary = sankey_data.groupby('Partner').agg({
     'Import_Quantity': 'sum',
     'Export_Quantity': 'sum'
@@ -145,7 +155,6 @@ top_partners = merged.groupby('Partner').agg({
     'Total_Trade': 'sum'
 }).sort_values(by='Total_Trade', ascending=False).head(10).reset_index()
 
-# Rename columns to include units
 top_partners = top_partners.rename(columns={
     'Import_Quantity': 'Import Quantity (KG)',
     'Export_Quantity': 'Export Quantity (KG)',
