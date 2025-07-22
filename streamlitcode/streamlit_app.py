@@ -45,7 +45,7 @@ for c in all_countries:
 
 # ---- UI ----
 st.set_page_config(layout="wide")
-st.title("PET Trade Balance Map (Europe + World)")
+st.title("PET Trade Balance Map (Europe + World), a flow analysis tool made by the GOAT")
 countries = sorted(df['Country'].dropna().unique())
 selected = st.multiselect("Select one or more countries to analyze", countries)
 if not selected:
