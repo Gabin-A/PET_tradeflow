@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 # ---- Load Data ----
 @st.cache_data
 def load_data():
-    df = pd.read_excel("Allcountries_export_WITS.xlsx", sheet_name="By-HS6Product")
+    df = pd.read_excel("../PET_flow/Allcountries_export_WITS.xlsx", sheet_name="By-HS6Product")
     df = df[
         (df['Partner'].notna()) &
         (df['Quantity'].notna()) &
