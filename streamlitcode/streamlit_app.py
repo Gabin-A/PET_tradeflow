@@ -43,133 +43,140 @@ for c in all_countries:
     if c not in ALL_COORDS:
         ALL_COORDS[c] = (None, None)
 
-# ---- UI ----
+# ---- Page Setup ----
 st.set_page_config(layout="wide")
-st.title("PET Trade Balance Map (Europe + World), a flow analysis tool made by the GOAT")
-countries = sorted(df['Country'].dropna().unique())
-selected = st.multiselect("Select one or more countries to analyze", countries)
-if not selected:
-    st.stop()
+page = st.sidebar.radio("Select Page", ["Country Analysis", "Global Net Balance"])
 
-# ---- Aggregate Data ----
-data = df[df['Country'].isin(selected)]
-imp = data[data['TradeFlow'] == 'Import'].groupby(['Country', 'Partner']).agg({
-    'Quantity': 'sum', 'Trade Value 1000USD': 'sum'
-}).reset_index().rename(columns={'Quantity': 'Import_Quantity', 'Trade Value 1000USD': 'Import_Value'})
+if page == "Country Analysis":
+    st.title("PET Trade Balance Map (Europe + World)")
+    countries = sorted(df['Country'].dropna().unique())
+    selected = st.multiselect("Select one or more countries to analyze", countries)
+    if not selected:
+        st.stop()
 
-exp = data[data['TradeFlow'] == 'Export'].groupby(['Country', 'Partner']).agg({
-    'Quantity': 'sum', 'Trade Value 1000USD': 'sum'
-}).reset_index().rename(columns={'Quantity': 'Export_Quantity', 'Trade Value 1000USD': 'Export_Value'})
+    # ---- Aggregate Data ----
+    data = df[df['Country'].isin(selected)]
+    imp = data[data['TradeFlow'] == 'Import'].groupby(['Country', 'Partner']).agg({
+        'Quantity': 'sum', 'Trade Value 1000USD': 'sum'
+    }).reset_index().rename(columns={'Quantity': 'Import_Quantity', 'Trade Value 1000USD': 'Import_Value'})
 
-merged = pd.merge(imp, exp, on=['Country', 'Partner'], how='outer').fillna(0)
-merged['Balance'] = merged['Export_Quantity'] - merged['Import_Quantity']
+    exp = data[data['TradeFlow'] == 'Export'].groupby(['Country', 'Partner']).agg({
+        'Quantity': 'sum', 'Trade Value 1000USD': 'sum'
+    }).reset_index().rename(columns={'Quantity': 'Export_Quantity', 'Trade Value 1000USD': 'Export_Value'})
 
-merged['Direction'] = merged['Balance'].apply(lambda x: 'Export Surplus' if x > 0 else ('Import Surplus' if x < 0 else 'Balanced'))
-merged['Color'] = merged['Direction'].map({'Export Surplus': 'green', 'Import Surplus': 'red', 'Balanced': 'gray'})
-merged['Total_Trade'] = merged['Export_Quantity'] + merged['Import_Quantity']
-merged['Size'] = merged['Total_Trade']**0.5 / 100
+    merged = pd.merge(imp, exp, on=['Country', 'Partner'], how='outer').fillna(0)
+    merged['Balance'] = merged['Export_Quantity'] - merged['Import_Quantity']
+    merged['Direction'] = merged['Balance'].apply(lambda x: 'Export Surplus' if x > 0 else ('Import Surplus' if x < 0 else 'Balanced'))
+    merged['Color'] = merged['Direction'].map({'Export Surplus': 'green', 'Import Surplus': 'red', 'Balanced': 'gray'})
+    merged['Total_Trade'] = merged['Export_Quantity'] + merged['Import_Quantity']
+    merged['Size'] = merged['Total_Trade']**0.5 / 100
+    merged['Lat'] = merged['Partner'].map(lambda c: ALL_COORDS.get(c, (None, None))[0])
+    merged['Lon'] = merged['Partner'].map(lambda c: ALL_COORDS.get(c, (None, None))[1])
+    merged['Text'] = merged.apply(lambda r: f"{r['Partner']}<br>Export: {r['Export_Quantity']:,.0f} Kg<br>Import: {r['Import_Quantity']:,.0f} Kg<br>Balance: {r['Balance']:,.0f} Kg", axis=1)
+    merged = merged.dropna(subset=['Lat', 'Lon'])
 
-merged['Lat'] = merged['Partner'].map(lambda c: ALL_COORDS.get(c, (None, None))[0])
-merged['Lon'] = merged['Partner'].map(lambda c: ALL_COORDS.get(c, (None, None))[1])
-merged['Text'] = merged.apply(lambda r: f"{r['Partner']}<br>Export: {r['Export_Quantity']:,.0f} Kg<br>Import: {r['Import_Quantity']:,.0f} Kg<br>Balance: {r['Balance']:,.0f} Kg", axis=1)
-merged = merged.dropna(subset=['Lat', 'Lon'])
-
-# ---- Plot Map ----
-fig = go.Figure()
-fig.add_trace(go.Scattergeo(
-    lon=merged['Lon'], lat=merged['Lat'], text=merged['Text'],
-    mode='markers',
-    marker=dict(
-        size=merged['Size'], color=merged['Color'], line=dict(width=0.5, color='black'),
-        sizemode='area', sizeref=2.*max(merged['Size'])/(40.**2), sizemin=4
-    ),
-    hoverinfo='text'
-))
-
-for country in selected:
-    if country in ALL_COORDS:
-        lat, lon = ALL_COORDS[country]
-        fig.add_trace(go.Scattergeo(
-            lon=[lon], lat=[lat], mode='markers+text',
-            marker=dict(size=10, color='blue'),
-            text=[country], textposition="top center"
-        ))
-
-fig.update_layout(
-    title=f"PET Trade Balance – {', '.join(selected)}",
-    geo=dict(
-        scope="world",
-        projection_type="natural earth",
-        showland=True,
-        showcountries=True,
-        landcolor='rgb(243, 243, 243)',
-        countrycolor='black',
+    # ---- Map ----
+    fig = go.Figure()
+    fig.add_trace(go.Scattergeo(
+        lon=merged['Lon'], lat=merged['Lat'], text=merged['Text'],
+        mode='markers',
+        marker=dict(size=merged['Size'], color=merged['Color'], line=dict(width=0.5, color='black'),
+                    sizemode='area', sizeref=2.*max(merged['Size'])/(40.**2), sizemin=4),
+        hoverinfo='text'
+    ))
+    for country in selected:
+        if country in ALL_COORDS:
+            lat, lon = ALL_COORDS[country]
+            fig.add_trace(go.Scattergeo(
+                lon=[lon], lat=[lat], mode='markers+text', marker=dict(size=10, color='blue'),
+                text=[country], textposition="top center"
+            ))
+    fig.update_layout(
+        title=f"PET Trade Balance – {', '.join(selected)}",
+        geo=dict(scope="world", projection_type="natural earth", showland=True, showcountries=True,
+                 landcolor='rgb(243, 243, 243)', countrycolor='black')
     )
-)
+    st.plotly_chart(fig, use_container_width=True)
 
-st.plotly_chart(fig, use_container_width=True)
+    # ---- Sankey Diagram ----
+    sankey_data = merged.copy()
+    sankey_data = sankey_data[sankey_data['Total_Trade'] > 0]
+    sankey_summary = sankey_data.groupby('Partner').agg({
+        'Import_Quantity': 'sum', 'Export_Quantity': 'sum'
+    }).reset_index()
+    top_imports = sankey_summary.sort_values(by='Import_Quantity', ascending=False).head(15)
+    top_exports = sankey_summary.sort_values(by='Export_Quantity', ascending=False).head(15)
+    sankey_subset = pd.concat([top_imports, top_exports]).drop_duplicates()
 
-# ---- Sankey Diagram (Top 15 Imports and Exports) ----
-sankey_data = merged.copy()
-sankey_data = sankey_data[sankey_data['Total_Trade'] > 0]
+    left_labels = [f"Import: {p} (kg)" for p in top_imports['Partner']]
+    right_labels = [f"Export: {p} (kg)" for p in top_exports['Partner']]
+    center_label = f"{', '.join(selected)} (kg)"
+    labels = left_labels + [center_label] + right_labels
+    label_map = {label: i for i, label in enumerate(labels)}
+    sources = [label_map[f"Import: {r['Partner']} (kg)"] for _, r in top_imports.iterrows()] + \
+              [label_map[center_label]] * len(top_exports)
+    targets = [label_map[center_label]] * len(top_imports) + \
+              [label_map[f"Export: {r['Partner']} (kg)"] for _, r in top_exports.iterrows()]
+    values = list(top_imports['Import_Quantity']) + list(top_exports['Export_Quantity'])
+    sankey_fig = go.Figure(data=[go.Sankey(
+        node=dict(pad=15, thickness=20, line=dict(color="black", width=0.5), label=labels),
+        link=dict(source=sources, target=targets, value=values)
+    )])
+    st.subheader("Top 15 Import/Export Flows (in kg) – Sankey Diagram")
+    st.plotly_chart(sankey_fig, use_container_width=True)
 
-sankey_summary = sankey_data.groupby('Partner').agg({
-    'Import_Quantity': 'sum',
-    'Export_Quantity': 'sum'
-}).reset_index()
+    # ---- Table ----
+    st.subheader("Top 10 Partners by Volume")
+    top_partners = merged.groupby('Partner').agg({
+        'Import_Quantity': 'sum', 'Export_Quantity': 'sum',
+        'Import_Value': 'sum', 'Export_Value': 'sum', 'Total_Trade': 'sum'
+    }).sort_values(by='Total_Trade', ascending=False).head(10).reset_index()
+    top_partners = top_partners.rename(columns={
+        'Import_Quantity': 'Import Quantity (KG)',
+        'Export_Quantity': 'Export Quantity (KG)',
+        'Import_Value': 'Import Value (1000 $)',
+        'Export_Value': 'Export Value (1000 $)',
+        'Total_Trade': 'Total Trade ($)'
+    })
+    st.dataframe(top_partners.style.format({
+        'Import Quantity (KG)': "{:.0f}",
+        'Export Quantity (KG)': "{:.0f}",
+        'Import Value (1000 $)': "${:,.0f}",
+        'Export Value (1000 $)': "${:,.0f}",
+        'Total Trade ($)': "{:.0f}"
+    }))
 
-top_imports = sankey_summary.sort_values(by='Import_Quantity', ascending=False).head(15)
-top_exports = sankey_summary.sort_values(by='Export_Quantity', ascending=False).head(15)
+elif page == "Global Net Balance":
+    st.title("Global PET Net Trade Balance")
+    balance_df = df.groupby(['Country', 'TradeFlow']).agg({
+        'Quantity': 'sum', 'Trade Value 1000USD': 'sum'
+    }).unstack().fillna(0)
+    balance_df.columns = ['Export_Quantity', 'Import_Quantity', 'Export_Value', 'Import_Value']
+    balance_df['Delta_Qty'] = balance_df['Export_Quantity'] - balance_df['Import_Quantity']
+    balance_df['Delta_Val'] = balance_df['Export_Value'] - balance_df['Import_Value']
+    balance_df = balance_df.reset_index()
+    balance_df['Lat'] = balance_df['Country'].map(lambda c: ALL_COORDS.get(c, (None, None))[0])
+    balance_df['Lon'] = balance_df['Country'].map(lambda c: ALL_COORDS.get(c, (None, None))[1])
+    balance_df['Color'] = balance_df['Delta_Qty'].apply(lambda x: 'green' if x > 0 else ('red' if x < 0 else 'gray'))
+    balance_df['Text'] = balance_df.apply(
+        lambda r: f"{r['Country']}<br>Δ Quantity: {r['Delta_Qty']:,.0f} Kg<br>Δ Value: ${r['Delta_Val']:,.0f}", axis=1
+    )
+    balance_df = balance_df.dropna(subset=['Lat', 'Lon'])
 
-sankey_subset = pd.concat([top_imports, top_exports]).drop_duplicates()
+    fig = go.Figure()
+    fig.add_trace(go.Scattergeo(
+        lon=balance_df['Lon'], lat=balance_df['Lat'], text=balance_df['Text'],
+        mode='markers',
+        marker=dict(size=10, color=balance_df['Color'], line=dict(width=0.5, color='black')),
+        hoverinfo='text'
+    ))
+    fig.update_layout(
+        title="Net Trade Position by Country",
+        geo=dict(scope="world", projection_type="natural earth", showland=True, showcountries=True,
+                 landcolor='rgb(243, 243, 243)', countrycolor='black')
+    )
+    st.plotly_chart(fig, use_container_width=True)
 
-left_labels = [f"Import: {p} (kg)" for p in top_imports['Partner']]
-right_labels = [f"Export: {p} (kg)" for p in top_exports['Partner']]
-center_label = f"{', '.join(selected)} (kg)"
-labels = left_labels + [center_label] + right_labels
-label_map = {label: i for i, label in enumerate(labels)}
-
-sources = [label_map[f"Import: {r['Partner']} (kg)"] for _, r in top_imports.iterrows()] + \
-          [label_map[center_label]] * len(top_exports)
-
-targets = [label_map[center_label]] * len(top_imports) + \
-          [label_map[f"Export: {r['Partner']} (kg)"] for _, r in top_exports.iterrows()]
-
-values = list(top_imports['Import_Quantity']) + list(top_exports['Export_Quantity'])
-
-sankey_fig = go.Figure(data=[go.Sankey(
-    node=dict(pad=15, thickness=20, line=dict(color="black", width=0.5), label=labels),
-    link=dict(source=sources, target=targets, value=values)
-)])
-
-st.subheader("Top 15 Import/Export Flows (in kg) – Sankey Diagram")
-st.plotly_chart(sankey_fig, use_container_width=True)
-
-# ---- Top 10 Partner Summary ----
-st.subheader("Top 10 Partners by Volume")
-top_partners = merged.groupby('Partner').agg({
-    'Import_Quantity': 'sum',
-    'Export_Quantity': 'sum',
-    'Import_Value': 'sum',
-    'Export_Value': 'sum',
-    'Total_Trade': 'sum'
-}).sort_values(by='Total_Trade', ascending=False).head(10).reset_index()
-
-top_partners = top_partners.rename(columns={
-    'Import_Quantity': 'Import Quantity (KG)',
-    'Export_Quantity': 'Export Quantity (KG)',
-    'Import_Value': 'Import Value (1000 $)',
-    'Export_Value': 'Export Value (1000 $)',
-    'Total_Trade': 'Total Trade ($)'
-})
-
-st.dataframe(top_partners.style.format({
-    'Import Quantity (KG)': "{:.0f}",
-    'Export Quantity (KG)': "{:.0f}",
-    'Import Value (1000 $)': "${:,.0f}",
-    'Export Value (1000 $)': "${:,.0f}",
-    'Total Trade ($)': "{:.0f}"
-}))
 
 
 
