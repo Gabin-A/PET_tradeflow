@@ -4,7 +4,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 
 # ---- Load Data ----
-@st.cache_data
+@st.cache_data.clear()
 def load_data():
     df = pd.read_excel("PET_flow/Allcountries_export_WITS.xlsx", sheet_name="By-HS6Product")
     df = df[
