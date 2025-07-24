@@ -200,7 +200,8 @@ if page == "PET Map":
 
 elif page == "Material 5407":
     df = load_5407()
-    st.title("Trade Balance Map for HS Code 5407")
+    st.title("Trade Balance Map for HS Code 5407 (filament yarns)")
+    st.subheader('HS code 5407 is used for fabrics woven from synthetic threads (like nylon or polyester). It covers a wide range of these fabrics, including those made with specific types of synthetic threads and those that have been processed in different ways (like bleaching, dyeing, or printing).')
     countries = sorted(df['Country'].dropna().unique())
     selected = st.multiselect("Select one or more countries to analyze", countries)
     if not selected:
@@ -297,9 +298,10 @@ elif page == "Material 5407":
         'Total Trade ($)': "{:.0f}"
     }))
 
-elif page == 'Material 391590':
+elif page == 'Material 391590 (waste)':
     df = load_391590()
-    st.title("Trade Balance Map for HS Code 391590")
+    st.title("Trade Balance Map for HS Code 391590 (plastic waste including, not exclusively, PET)")
+    st.subheader('HS code 391590 includes waste, parings, and scrap of polyethylene terephthalate (PET)')
     countries = sorted(df['Country'].dropna().unique())
     selected = st.multiselect("Select one or more countries to analyze", countries)
     if not selected:
@@ -396,9 +398,10 @@ elif page == 'Material 391590':
         'Total Trade ($)': "{:.0f}"
     }))
 
-elif page == "Material 392062":
+elif page == "Material 392062 (pet films, foils...)":
     df = load_392062()
-    st.title("Trade Balance Map for HS Code 392062")
+    st.title("Trade Balance Map for HS Code 392062 (pet films, foils...)")
+    st.subheader('HS code 392062 refers to plates, sheets, film, foil, and strip of plastics, specifically non-cellular and not reinforced, laminated, supported or similarly combined with other materials, and made of poly(ethylene terephthalate')
     countries = sorted(df['Country'].dropna().unique())
     selected = st.multiselect("Select one or more countries to analyze", countries)
     if not selected:
@@ -495,9 +498,10 @@ elif page == "Material 392062":
         'Total Trade ($)': "{:.0f}"
     }))
 
-elif page == "Material 392330":
+elif page == "Material 392330 bottls or similar including PET":
     df = load_392330()
     st.title("Trade Balance Map for HS Code 392330")
+    df.subheader('HS code 392330, "Carboys, bottles, flasks and similar articles" does include PET (Polyethylene Terephthalate) bottles, among other types of plastic bottles used for packaging')
     countries = sorted(df['Country'].dropna().unique())
     selected = st.multiselect("Select one or more countries to analyze", countries)
     if not selected:
