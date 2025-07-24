@@ -18,7 +18,7 @@ def load_pet_data():
 # ---- Load HS 5407 Data ----
 @st.cache_data
 def load_5407():
-    df = pd.read_excel("/workspaces/PET_tradeflow/PET_flow/total_5407.xlsx")
+    df = pd.read_excel("PET_flow/total_5407.xlsx", sheet_name="Sheet1")
     df = df.rename(columns={
         "ReporterName": "Country",
         "PartnerName": "Partner",
