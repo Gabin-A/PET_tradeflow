@@ -501,7 +501,7 @@ elif page == "Material 392062":
 elif page == "Material 392330":
     df = load_392330()
     st.title("Trade Balance Map for HS Code 392330")
-    df.subheader('HS code 392330, "Carboys, bottles, flasks and similar articles" does include PET (Polyethylene Terephthalate) bottles, among other types of plastic bottles used for packaging')
+    df.subheader('HS code 392330, Carboys, bottles, flasks and similar articles" does include PET (Polyethylene Terephthalate) bottles, among other types of plastic bottles used for packaging')
     countries = sorted(df['Country'].dropna().unique())
     selected = st.multiselect("Select one or more countries to analyze", countries)
     if not selected:
