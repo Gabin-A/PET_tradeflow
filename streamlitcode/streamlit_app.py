@@ -98,7 +98,8 @@ page = st.sidebar.radio("Select Page", [
 
 
 if page == "PET Map":
-    st.title("PET Trade Balance Map")
+    st.title("PET Trade Balance Map (pet in primary form, basically granulates or resin)")
+    st.subheader('HS code 390760 refers to polyethylene terephthalate (PET) in primary forms. This code falls under the broader category of "Polyacetals, other polyethers and epoxide resins, in primary forms; polycarbonates, alkyd resins, polyallyl esters and other polyesters, in primary forms". Specifically, 390760 is used for PET when it is in its raw, unshaped state, ready for further processing')
     df = load_pet_data()
     # Your existing PET map logic goes here (you can paste from previous version)
     countries = sorted(df['Country'].dropna().unique())
