@@ -611,7 +611,7 @@ elif page == "Material 392330":
     }))
 
 elif page == "Material 291736":
-    df = load_392330()
+    df = load_291736()
     st.title("Trade Balance Map for HS Code 392330")
     st.subheader('HS code 392330, Carboys, bottles, flasks and similar articles" does include PET (Polyethylene Terephthalate) bottles, among other types of plastic bottles used for packaging')
     countries = sorted(df['Country'].dropna().unique())
