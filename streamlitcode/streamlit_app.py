@@ -395,7 +395,7 @@ elif page == 'Material 391590':
         'Total Trade ($)': "{:.0f}"
     }))
 
-    elif page == "Material 392062":
+elif page == "Material 392062":
     df = load_392062()
     st.title("Trade Balance Map for HS Code 392062")
     countries = sorted(df['Country'].dropna().unique())
@@ -494,7 +494,7 @@ elif page == 'Material 391590':
         'Total Trade ($)': "{:.0f}"
     }))
 
-    elif page == "Material 392330":
+elif page == "Material 392330":
     df = load_392330()
     st.title("Trade Balance Map for HS Code 392330")
     countries = sorted(df['Country'].dropna().unique())
