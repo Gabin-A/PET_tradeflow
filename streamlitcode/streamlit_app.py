@@ -298,7 +298,7 @@ elif page == "Material 5407":
         'Total Trade ($)': "{:.0f}"
     }))
 
-elif page == 'Material 391590 (waste)':
+elif page == 'Material 391590':
     df = load_391590()
     st.title("Trade Balance Map for HS Code 391590 (plastic waste including, not exclusively, PET)")
     st.subheader('HS code 391590 includes waste, parings, and scrap of polyethylene terephthalate (PET)')
@@ -398,7 +398,7 @@ elif page == 'Material 391590 (waste)':
         'Total Trade ($)': "{:.0f}"
     }))
 
-elif page == "Material 392062 (pet films, foils...)":
+elif page == "Material 392062":
     df = load_392062()
     st.title("Trade Balance Map for HS Code 392062 (pet films, foils...)")
     st.subheader('HS code 392062 refers to plates, sheets, film, foil, and strip of plastics, specifically non-cellular and not reinforced, laminated, supported or similarly combined with other materials, and made of poly(ethylene terephthalate')
@@ -498,7 +498,7 @@ elif page == "Material 392062 (pet films, foils...)":
         'Total Trade ($)': "{:.0f}"
     }))
 
-elif page == "Material 392330 bottls or similar including PET":
+elif page == "Material 392330":
     df = load_392330()
     st.title("Trade Balance Map for HS Code 392330")
     df.subheader('HS code 392330, "Carboys, bottles, flasks and similar articles" does include PET (Polyethylene Terephthalate) bottles, among other types of plastic bottles used for packaging')
