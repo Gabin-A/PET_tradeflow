@@ -1,11 +1,11 @@
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
-import plotly.express as px
 
-# ---- Load Data ----
+# ---- Load PET Data ----
 @st.cache_data
-def load_data():
+
+def load_pet_data():
     df = pd.read_excel("PET_flow/Allcountries_export_WITS.xlsx", sheet_name="By-HS6Product")
     df = df[
         (df['Partner'].notna()) &
@@ -16,9 +16,22 @@ def load_data():
     df = df.rename(columns={'Reporter': 'Country'})
     return df
 
-df = load_data()
+# ---- Load HS 5407 Data ----
+@st.cache_data
 
-# ---- Preloaded Coordinates for All Countries ----
+def load_5407():
+    df = pd.read_excel("/mnt/data/total_5407.xlsx", sheet_name="Sheet1")
+    df = df.rename(columns={
+        "ReporterName": "Country",
+        "PartnerName": "Partner",
+        "TradeValue in 1000 USD": "Value",
+        "TradeFlowName": "TradeFlow"
+    })
+    df = df[df["TradeFlow"].isin(["Gross Imports", "Gross Exports"])]
+    df["TradeFlow"] = df["TradeFlow"].replace({"Gross Imports": "Import", "Gross Exports": "Export"})
+    return df
+
+# ---- Coordinates ----
 ALL_COORDS = {
     'Austria': (47.5162, 14.5501), 'Germany': (51.1657, 10.4515), 'France': (46.6034, 1.8883),
     'Italy': (41.8719, 12.5674), 'Poland': (51.9194, 19.1451), 'Slovenia': (46.1512, 14.9955),
@@ -37,32 +50,26 @@ ALL_COORDS = {
     'Indonesia': (-0.7893, 113.9213), 'Malaysia': (4.2105, 101.9758)
 }
 
-# Add any missing countries dynamically
-all_countries = pd.unique(df[['Country', 'Partner']].values.ravel('K'))
-for c in all_countries:
-    if c not in ALL_COORDS:
-        ALL_COORDS[c] = (None, None)
-
-# ---- Page Setup ----
+# ---- Streamlit App ----
 st.set_page_config(layout="wide")
-page = st.sidebar.radio("Select Page", ["Country Analysis", "Global Net Balance"])
+page = st.sidebar.radio("Select Page", ["PET Map", "Material 5407"])
 
-if page == "Country Analysis":
-    st.title("PET Trade Balance Map (Europe + World)")
+if page == "Material 5407":
+    df = load_5407()
+    st.title("Trade Balance Map for HS Code 5407")
     countries = sorted(df['Country'].dropna().unique())
     selected = st.multiselect("Select one or more countries to analyze", countries)
     if not selected:
         st.stop()
 
-    # ---- Aggregate Data ----
     data = df[df['Country'].isin(selected)]
     imp = data[data['TradeFlow'] == 'Import'].groupby(['Country', 'Partner']).agg({
-        'Quantity': 'sum', 'Trade Value 1000USD': 'sum'
-    }).reset_index().rename(columns={'Quantity': 'Import_Quantity', 'Trade Value 1000USD': 'Import_Value'})
+        'Quantity': 'sum', 'Value': 'sum'
+    }).reset_index().rename(columns={'Quantity': 'Import_Quantity', 'Value': 'Import_Value'})
 
     exp = data[data['TradeFlow'] == 'Export'].groupby(['Country', 'Partner']).agg({
-        'Quantity': 'sum', 'Trade Value 1000USD': 'sum'
-    }).reset_index().rename(columns={'Quantity': 'Export_Quantity', 'Trade Value 1000USD': 'Export_Value'})
+        'Quantity': 'sum', 'Value': 'sum'
+    }).reset_index().rename(columns={'Quantity': 'Export_Quantity', 'Value': 'Export_Value'})
 
     merged = pd.merge(imp, exp, on=['Country', 'Partner'], how='outer').fillna(0)
     merged['Balance'] = merged['Export_Quantity'] - merged['Import_Quantity']
@@ -92,13 +99,13 @@ if page == "Country Analysis":
                 text=[country], textposition="top center"
             ))
     fig.update_layout(
-        title=f"PET Trade Balance – {', '.join(selected)}",
+        title=f"Trade Balance – HS 5407 – {', '.join(selected)}",
         geo=dict(scope="world", projection_type="natural earth", showland=True, showcountries=True,
                  landcolor='rgb(243, 243, 243)', countrycolor='black')
     )
     st.plotly_chart(fig, use_container_width=True)
 
-    # ---- Sankey Diagram ----
+    # ---- Sankey ----
     sankey_data = merged.copy()
     sankey_data = sankey_data[sankey_data['Total_Trade'] > 0]
     sankey_summary = sankey_data.groupby('Partner').agg({
@@ -146,36 +153,6 @@ if page == "Country Analysis":
         'Total Trade ($)': "{:.0f}"
     }))
 
-elif page == "Global Net Balance":
-    st.title("Global PET Net Trade Balance")
-    balance_df = df.groupby(['Country', 'TradeFlow']).agg({
-        'Quantity': 'sum', 'Trade Value 1000USD': 'sum'
-    }).unstack().fillna(0)
-    balance_df.columns = ['Export_Quantity', 'Import_Quantity', 'Export_Value', 'Import_Value']
-    balance_df['Delta_Qty'] = balance_df['Export_Quantity'] - balance_df['Import_Quantity']
-    balance_df['Delta_Val'] = balance_df['Export_Value'] - balance_df['Import_Value']
-    balance_df = balance_df.reset_index()
-    balance_df['Lat'] = balance_df['Country'].map(lambda c: ALL_COORDS.get(c, (None, None))[0])
-    balance_df['Lon'] = balance_df['Country'].map(lambda c: ALL_COORDS.get(c, (None, None))[1])
-    balance_df['Color'] = balance_df['Delta_Qty'].apply(lambda x: 'green' if x > 0 else ('red' if x < 0 else 'gray'))
-    balance_df['Text'] = balance_df.apply(
-        lambda r: f"{r['Country']}<br>Δ Quantity: {r['Delta_Qty']:,.0f} Kg<br>Δ Value: ${r['Delta_Val']:,.0f}", axis=1
-    )
-    balance_df = balance_df.dropna(subset=['Lat', 'Lon'])
-
-    fig = go.Figure()
-    fig.add_trace(go.Scattergeo(
-        lon=balance_df['Lon'], lat=balance_df['Lat'], text=balance_df['Text'],
-        mode='markers',
-        marker=dict(size=10, color=balance_df['Color'], line=dict(width=0.5, color='black')),
-        hoverinfo='text'
-    ))
-    fig.update_layout(
-        title="Net Trade Position by Country",
-        geo=dict(scope="world", projection_type="natural earth", showland=True, showcountries=True,
-                 landcolor='rgb(243, 243, 243)', countrycolor='black')
-    )
-    st.plotly_chart(fig, use_container_width=True)
 
 
 
