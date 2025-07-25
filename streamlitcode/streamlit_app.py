@@ -112,6 +112,7 @@ PARTNER_RENAME = {
     "China, Macao SAR": "Macau",
     "North Macedonia": "Macedonia",
     "Slovak Republic": "Slovakia",
+    'Norway,Sb,JM': 'Norway',
     "Türkiye": "Turkey",
     "Côte d'Ivoire": "Ivory Coast",
     "Eswatini": "Swaziland",
