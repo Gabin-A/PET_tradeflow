@@ -96,6 +96,30 @@ ALL_COORDS = {
     'South Africa': (-30.5595, 22.9375), 'Singapore': (1.3521, 103.8198), 'Thailand': (15.8700, 100.9925),
     'Indonesia': (-0.7893, 113.9213), 'Malaysia': (4.2105, 101.9758)
 }
+# Fix special or abbreviated names
+PARTNER_RENAME = {
+    "Switz.Lich": "Switzerland",
+    "U.S.A": "United States",
+    "U.K": "United Kingdom",
+    "Czechia": "Czech Republic",
+    "Korea, Rep.": "South Korea",
+    "Russian Federation": "Russia",
+    "Viet Nam": "Vietnam",
+    "Iran (Islamic Rep. of)": "Iran",
+    "Hong Kong, China": "Hong Kong",
+    "China, Hong Kong SAR": "Hong Kong",
+    "China, Macao SAR": "Macau",
+    "North Macedonia": "Macedonia",
+    "Slovak Republic": "Slovakia",
+    "Türkiye": "Turkey",
+    "Côte d'Ivoire": "Ivory Coast",
+    "Eswatini": "Swaziland",
+    "Lao People's Democratic Republic": "Laos"
+    "France+Monaco": "France"
+    'Untd.Kingdom': 'United Kingdom'
+    'USA,PR,USVI': 'United States'
+    'Yugoslavia': 'Serbia'
+}
 
 # ---- Streamlit App ----
 st.set_page_config(layout="wide")
@@ -134,6 +158,8 @@ if page == "PET Map":
     merged['Color'] = merged['Direction'].map({'Export Surplus': 'green', 'Import Surplus': 'red', 'Balanced': 'gray'})
     merged['Total_Trade'] = merged['Export_Quantity'] + merged['Import_Quantity']
     merged['Size'] = merged['Total_Trade']**0.5 / 100
+    merged['Partner'] = merged['Partner'].replace(PARTNER_RENAME)
+
     merged['Lat'] = merged['Partner'].map(lambda c: ALL_COORDS.get(c, (None, None))[0])
     merged['Lon'] = merged['Partner'].map(lambda c: ALL_COORDS.get(c, (None, None))[1])
     merged['Text'] = merged.apply(lambda r: f"{r['Partner']}<br>Export: {r['Export_Quantity']:,.0f} Kg<br>Import: {r['Import_Quantity']:,.0f} Kg<br>Balance: {r['Balance']:,.0f} Kg", axis=1)
@@ -234,6 +260,8 @@ elif page == "Material 5407":
     merged['Color'] = merged['Direction'].map({'Export Surplus': 'green', 'Import Surplus': 'red', 'Balanced': 'gray'})
     merged['Total_Trade'] = merged['Export_Quantity'] + merged['Import_Quantity']
     merged['Size'] = merged['Total_Trade']**0.5 / 100
+    merged['Partner'] = merged['Partner'].replace(PARTNER_RENAME)
+
     merged['Lat'] = merged['Partner'].map(lambda c: ALL_COORDS.get(c, (None, None))[0])
     merged['Lon'] = merged['Partner'].map(lambda c: ALL_COORDS.get(c, (None, None))[1])
     merged['Text'] = merged.apply(lambda r: f"{r['Partner']}<br>Export: {r['Export_Quantity']:,.0f} Kg<br>Import: {r['Import_Quantity']:,.0f} Kg<br>Balance: {r['Balance']:,.0f} Kg", axis=1)
@@ -334,6 +362,8 @@ elif page == 'Material 391590':
     merged['Color'] = merged['Direction'].map({'Export Surplus': 'green', 'Import Surplus': 'red', 'Balanced': 'gray'})
     merged['Total_Trade'] = merged['Export_Quantity'] + merged['Import_Quantity']
     merged['Size'] = merged['Total_Trade']**0.5 / 100
+    merged['Partner'] = merged['Partner'].replace(PARTNER_RENAME)
+
     merged['Lat'] = merged['Partner'].map(lambda c: ALL_COORDS.get(c, (None, None))[0])
     merged['Lon'] = merged['Partner'].map(lambda c: ALL_COORDS.get(c, (None, None))[1])
     merged['Text'] = merged.apply(lambda r: f"{r['Partner']}<br>Export: {r['Export_Quantity']:,.0f} Kg<br>Import: {r['Import_Quantity']:,.0f} Kg<br>Balance: {r['Balance']:,.0f} Kg", axis=1)
@@ -434,6 +464,8 @@ elif page == "Material 392062":
     merged['Color'] = merged['Direction'].map({'Export Surplus': 'green', 'Import Surplus': 'red', 'Balanced': 'gray'})
     merged['Total_Trade'] = merged['Export_Quantity'] + merged['Import_Quantity']
     merged['Size'] = merged['Total_Trade']**0.5 / 100
+    merged['Partner'] = merged['Partner'].replace(PARTNER_RENAME)
+
     merged['Lat'] = merged['Partner'].map(lambda c: ALL_COORDS.get(c, (None, None))[0])
     merged['Lon'] = merged['Partner'].map(lambda c: ALL_COORDS.get(c, (None, None))[1])
     merged['Text'] = merged.apply(lambda r: f"{r['Partner']}<br>Export: {r['Export_Quantity']:,.0f} Kg<br>Import: {r['Import_Quantity']:,.0f} Kg<br>Balance: {r['Balance']:,.0f} Kg", axis=1)
@@ -534,6 +566,8 @@ elif page == "Material 392330":
     merged['Color'] = merged['Direction'].map({'Export Surplus': 'green', 'Import Surplus': 'red', 'Balanced': 'gray'})
     merged['Total_Trade'] = merged['Export_Quantity'] + merged['Import_Quantity']
     merged['Size'] = merged['Total_Trade']**0.5 / 100
+    merged['Partner'] = merged['Partner'].replace(PARTNER_RENAME)
+
     merged['Lat'] = merged['Partner'].map(lambda c: ALL_COORDS.get(c, (None, None))[0])
     merged['Lon'] = merged['Partner'].map(lambda c: ALL_COORDS.get(c, (None, None))[1])
     merged['Text'] = merged.apply(lambda r: f"{r['Partner']}<br>Export: {r['Export_Quantity']:,.0f} Kg<br>Import: {r['Import_Quantity']:,.0f} Kg<br>Balance: {r['Balance']:,.0f} Kg", axis=1)
@@ -634,6 +668,8 @@ elif page == "Material 291736":
     merged['Color'] = merged['Direction'].map({'Export Surplus': 'green', 'Import Surplus': 'red', 'Balanced': 'gray'})
     merged['Total_Trade'] = merged['Export_Quantity'] + merged['Import_Quantity']
     merged['Size'] = merged['Total_Trade']**0.5 / 100
+    merged['Partner'] = merged['Partner'].replace(PARTNER_RENAME)
+
     merged['Lat'] = merged['Partner'].map(lambda c: ALL_COORDS.get(c, (None, None))[0])
     merged['Lon'] = merged['Partner'].map(lambda c: ALL_COORDS.get(c, (None, None))[1])
     merged['Text'] = merged.apply(lambda r: f"{r['Partner']}<br>Export: {r['Export_Quantity']:,.0f} Kg<br>Import: {r['Import_Quantity']:,.0f} Kg<br>Balance: {r['Balance']:,.0f} Kg", axis=1)
