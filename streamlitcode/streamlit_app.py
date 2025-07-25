@@ -94,7 +94,7 @@ ALL_COORDS = {
     'South Korea': (35.9078, 127.7669), 'Australia': (-25.2744, 133.7751), 'Russia': (61.5240, 105.3188),
     'Turkey': (38.9637, 35.2433), 'Ukraine': (48.3794, 31.1656), 'Egypt': (26.8206, 30.8025),
     'South Africa': (-30.5595, 22.9375), 'Singapore': (1.3521, 103.8198), 'Thailand': (15.8700, 100.9925),
-    'Indonesia': (-0.7893, 113.9213), 'Malaysia': (4.2105, 101.9758)
+    'Indonesia': (-0.7893, 113.9213), 'Malaysia': (4.2105, 101.9758), 'Europe not specified': (46.760823, -13.594238), 'Asia not specified': (15.625005, 89.865329) 
 }
 # Fix special or abbreviated names
 PARTNER_RENAME = {
@@ -102,6 +102,7 @@ PARTNER_RENAME = {
     "U.S.A": "United States",
     "U.K": "United Kingdom",
     "Czechia": "Czech Republic",
+    'Czech Rep': 'Czech Republic'
     "Korea, Rep.": "South Korea",
     "Russian Federation": "Russia",
     "Viet Nam": "Vietnam",
@@ -118,7 +119,10 @@ PARTNER_RENAME = {
     "France+Monaco": "France",
     'Untd.Kingdom': 'United Kingdom',
     'USA,PR,USVI': 'United States',
-    'Yugoslavia': 'Serbia'
+    'Yugoslavia': 'Serbia',
+    'Eur. Othr.ns': 'Europe not specified'
+    'Asia Othr.ns': 'Asia not specified'
+
 }
 
 # ---- Streamlit App ----
