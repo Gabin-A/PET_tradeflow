@@ -120,7 +120,7 @@ PARTNER_RENAME = {
     'Untd.Kingdom': 'United Kingdom',
     'USA,PR,USVI': 'United States',
     'Yugoslavia': 'Serbia',
-    'Eur. Othr.ns': 'Europe not specified'
+    'Eur. Othr.ns': 'Europe not specified',
     'Asia Othr.ns': 'Asia not specified'
 
 }
