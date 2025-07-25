@@ -114,10 +114,10 @@ PARTNER_RENAME = {
     "Türkiye": "Turkey",
     "Côte d'Ivoire": "Ivory Coast",
     "Eswatini": "Swaziland",
-    "Lao People's Democratic Republic": "Laos"
-    "France+Monaco": "France"
-    'Untd.Kingdom': 'United Kingdom'
-    'USA,PR,USVI': 'United States'
+    "Lao People's Democratic Republic": "Laos",
+    "France+Monaco": "France",
+    'Untd.Kingdom': 'United Kingdom',
+    'USA,PR,USVI': 'United States',
     'Yugoslavia': 'Serbia'
 }
 
