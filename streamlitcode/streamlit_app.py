@@ -102,7 +102,7 @@ PARTNER_RENAME = {
     "U.S.A": "United States",
     "U.K": "United Kingdom",
     "Czechia": "Czech Republic",
-    'Czech Rep': 'Czech Republic'
+    'Czech Rep': 'Czech Republic',
     "Korea, Rep.": "South Korea",
     "Russian Federation": "Russia",
     "Viet Nam": "Vietnam",
